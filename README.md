@@ -7,8 +7,7 @@ Demonstrating how to do analytics on ADAM variants data.
 First install ADAM
 
 ```bash
-# git clone https://github.com/bigdatagenomics/adam.git
-git clone https://github.com/tomwhite/adam.git # for https://github.com/bigdatagenomics/adam/pull/630
+git clone https://github.com/bigdatagenomics/adam.git
 cd adam
 export MAVEN_OPTS='-Xmx512m -XX:MaxPermSize=128m'
 mvn clean package -DskipTests
@@ -102,5 +101,26 @@ select * from genotypes limit 1;
 select count(*) from genotypes where variant__start > 50000000 and variant__end < 51000000;
 select min(variant__start),  max(variant__start) from genotypes;
 ```
+
+## Use Spark to do a range lookup
+
+Start an ADAM shell (which starts a Spark shell with the ADAM libraries already registered):
+
+```bash
+ADAM_OPTS='--conf spark.hadoop.parquet.task.side.metadata=false' adam-shell --master yarn-client --executor-memory 4G
+```
+
+In the shell, try the following:
+
+```
+import org.bdgenomics.adam.rdd.ADAMContext._
+import parquet.filter2.dsl.Dsl._
+val pred = (LongColumn("variant.start") > 50000000 && LongColumn("variant.end") < 50000060)
+val samples = sc.loadParquetGenotypes("genomics/1kg/parquet/chr22", predicate = Some(pred))
+println(samples.count)
+println(samples.first)
+```
+
+
 
 
