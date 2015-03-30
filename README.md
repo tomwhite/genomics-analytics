@@ -115,10 +115,11 @@ In the shell, try the following:
 ```
 import org.bdgenomics.adam.rdd.ADAMContext._
 import parquet.filter2.dsl.Dsl._
-val pred = (LongColumn("variant.start") > 50000000 && LongColumn("variant.end") < 50000060)
+// following line does not work due to https://issues.apache.org/jira/browse/PARQUET-173
+// val pred = (LongColumn("variant.start") > 50000000L && LongColumn("variant.end") < 50000060L)
+val pred = LongColumn("variant.start") > 50000000L
 val samples = sc.loadParquetGenotypes("genomics/1kg/parquet/chr22", predicate = Some(pred))
-println(samples.count)
-println(samples.first)
+samples.take(2).foreach(println(_))
 ```
 
 
