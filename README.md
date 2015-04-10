@@ -54,6 +54,21 @@ Flatten with ADAM, so that we can use Impala to query later on.
 adam-submit --master yarn-cluster --driver-memory 4G --num-executors 24 --executor-cores 2 --executor-memory 4G \
   flatten genomics/1kg/parquet/chr22 genomics/1kg/parquet/chr22_flat
 ```
+
+## (Optional) Use pre-converted Eggo datasets
+
+Instead of running the conversion ourselves from VCF to Parquet, we can use pre-converted Parquet datasets from the [Eggo project](https://github.com/bigdatagenomics/eggo), which is quicker.
+
+Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in your shell, then run:
+
+```bash
+hadoop distcp \
+  -D fs.s3n.awsAccessKeyId=$AWS_ACCESS_KEY_ID \
+  -D fs.s3n.awsSecretAccessKey=$AWS_SECRET_ACCESS_KEY \
+  -update \
+  s3n://bdg-eggo/1kg/genotypes 1kg/genotypes
+```
+
 ## Register the data in the Hive metastore
 
 This is most easily done using the Kite tools.
