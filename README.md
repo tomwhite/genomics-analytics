@@ -100,6 +100,18 @@ Move the data into the Kite dataset:
 hadoop fs -mv genomics/1kg/parquet/chr22_flat/*.parquet /user/hive/warehouse/genotypes
 ```
 
+### TODO: Alternative way
+
+The latest (trunk) Kite code makes this step simpler, since it's now possible to create
+a dataset from existing Parquet files in one step.
+See https://issues.cloudera.org/browse/CDK-902
+
+```
+export HADOOP_CONF_DIR=/etc/hadoop/conf
+export HIVE_CONF_DIR=/etc/hive/conf
+# build https://github.com/tomwhite/kite.git, branch adam-fixes
+```
+
 ## Use Impala to query the dataset
 
 Start an Impala shell by typing `impala-shell`. Then run the following so that Impala picks up the new data, and then computes statistics on it.
