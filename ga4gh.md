@@ -93,7 +93,8 @@ impala-shell -q 'select count(*) from datasets.variants_flat'
 
 The existing data is not partitioned. We can use another Crunch program to partition it
  and write the new partitioned data into a new dataset with a particular partitioning
- strategy (specified in a JSON file).
+ strategy (specified in a JSON file). We partition by chromosome and locus rounded down
+  to the nearest million.
 
 ```bash
 hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
@@ -126,3 +127,11 @@ impala-shell -q 'compute stats datasets.variants_flat_locuspart'
 impala-shell -q 'select count(*) from datasets.variants_flat_locuspart'
 impala-shell -q 'select count(*) from datasets.variants_flat_locuspart where referencename="chr1"'
 ```
+
+The following expression can be used in SQL queries to find the locus segment (`pos`)
+that a particular locus in the sequence (`<locus>`) occurs in.
+
+```
+cast(floor(<locus> / 1000000.) AS INT) * 1000000
+```
+
