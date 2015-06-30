@@ -53,7 +53,7 @@ Crunch program, which will flatten any Avro or Parquet-formatted data and write 
 in Parquet format.
 
 ```bash
-hadoop jar target/adam-partitioning-0.0.1-SNAPSHOT-job.jar \
+hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
   CrunchFlattenTool \
   datasets/variants_avro \
   hdfs:datasets/variants_flat
@@ -96,7 +96,7 @@ The existing data is not partitioned. We can use another Crunch program to parti
  strategy (specified in a JSON file).
 
 ```bash
-hadoop jar target/adam-partitioning-0.0.1-SNAPSHOT-job.jar \
+hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
   CrunchPartitionTool \
   ga4gh-variants-partition-strategy \
   datasets/variants_flat \

@@ -1,0 +1,4 @@
+[
+  { "type": "identity", "source": "referenceName", "name": "chr" },
+  { "type": "range", "source": "start", "name": "pos", "size": 1000000 }
+]
