@@ -7,9 +7,12 @@ Demonstrating how to do analytics on variants data stored in GA4GH Parquet forma
 You will need a Hadoop cluster. These instructions assume CDH 5.4.2.
 
 We'll use the Kite command line tools. Checkout, build and install this version, which
-fixes a bug in the Hive partitioning: [https://github.com/tomwhite/kite/tree/existing-partition-bug](https://github.com/tomwhite/kite/tree/existing-partition-bug)
+fixes a [bug in the Hive partitioning](https://issues.cloudera.org/browse/KITE-1028):
+[https://github.com/tomwhite/kite/tree/existing-partition-bug](https://github.com/tomwhite/kite/tree/existing-partition-bug)
 
-Unpack the Kite tarball and put the directory on your `PATH`.
+Unpack the Kite tarball from the _kite-tools-parent/kite-tools-cdh5/target_ directory and
+ put the top-level unpacked directory on your `PATH` (along with a couple of other
+ configuration environment variables):
 
 ```bash
 export PATH=~/sw/kite-tools-cdh5-1.1.1-SNAPSHOT/bin:$PATH
@@ -22,7 +25,8 @@ export HIVE_CONF_DIR=/etc/hive/conf
 We'll start with a test file that is already in GA4GH Avro format. This was generated
 using [hpg-bigdata](https://github.com/opencb/hpg-bigdata).
 
-First convert it to Avro with no compression:
+First convert it to Avro with no compression (deflate is not used by the Kite tools
+we'll be using later):
 
 ```bash
 avro-tools recodec ~/data/isaac2.vcf.gz.avro.deflate ~/data/isaac2.vcf.gz.avro
@@ -39,7 +43,7 @@ hadoop fs -put ~/data/isaac2.vcf.gz.avro datasets/variants_avro
 
 First we convert the data into a Kite dataset, which makes it easier to work on it with
  Hadoop tools. The following command converts it in-place, by adding metadata to a
- _.metadata_ directory:
+ _.metadata_ subdirectory:
 
 ```bash
 kite-dataset create dataset:hdfs:datasets/variants_avro
@@ -59,7 +63,7 @@ hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
   hdfs:datasets/variants_flat
 ```
 
-Inspect the data with
+Inspect the first 10 records of the data with
 
 ```bash
 kite-dataset show dataset:hdfs:datasets/variants_flat
@@ -68,14 +72,16 @@ kite-dataset show dataset:hdfs:datasets/variants_flat
 ### Using Hive and Impala
 
 To run SQL queries on the data we need to have the metadata in the Hive metastore. One
-way of doing that is to create an external table. Kite can do this withe the following
-command:
+way of doing that is to create an external table where the data is stored outside of
+Hive's managed filesystem, but the table definitions are still stored in Hive. Kite can
+do this with the following command, which inspects the data to find its format and
+schema and creates the appropriate table definition for Hive:
 
 ```bash
 kite-dataset create dataset:hive:/user/tom/datasets/variants_flat
 ```
 
-Try querying the table in Hive:
+Now you can query the table in Hive:
 
 ```bash
 hive -e 'select count(*) from datasets.variants_flat'
@@ -107,7 +113,8 @@ hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
 ### Using Hive and Impala
 
 Use Kite to create a Hive table for the data. Note that this command takes several
-minutes to run since partitions are added one-by-one rather than in batches:
+minutes to run since partitions are added one-by-one rather than in batches (see
+[KITE-1028](https://issues.cloudera.org/browse/KITE-1028)):
 
 ```bash
 kite-dataset create dataset:hive:/user/tom/datasets/variants_flat_locuspart
@@ -128,8 +135,13 @@ impala-shell -q 'select count(*) from datasets.variants_flat_locuspart'
 impala-shell -q 'select count(*) from datasets.variants_flat_locuspart where referencename="chr1"'
 ```
 
-The following expression can be used in SQL queries to find the locus segment (`pos`)
-that a particular locus in the sequence (`<locus>`) occurs in.
+### More sophisticated queries
+
+Obviously it is possible to run much more sophisticated analyses on the data using SQL.
+
+Often it is necessary to find the locus segment (`pos`) that a particular locus in the
+sequence (`<locus>`) occurs in, and the following expression can be used in SQL queries
+ to do this:
 
 ```
 cast(floor(<locus> / 1000000.) AS INT) * 1000000
