@@ -1,0 +1,202 @@
+@namespace("org.ga4gh.models")
+
+/**
+Defines types used by the GA4GH Variants API.
+
+Variants API servers may implement either or both of two modes: "classic", in
+which all variation is described in terms of `Variant`s, and "graph", in which
+all variation is associated with `Allele`s which may participate in `Varaints`
+or be called on their own. The "graph" mode is to be preferred in new client and
+server implementations.
+
+The `sendsMode()` method in the References API may be used to determine if a
+server sends data in a given mode.
+*/
+protocol FlatVariants {
+
+/**
+A `FlatVariant` is a `Variant` but with nested fields flattened so it is suitable for
+use with Hive and Impala.
+*/
+record FlatVariant {
+
+  /** The variant ID. */
+  string id;
+
+  /** The ID of the variant set this variant belongs to. */
+  string variantSetId;
+
+  /** Names for the variant, for example a RefSNP ID. Only the first two are retained. */
+  union { null, string } names_1 = null;
+  union { null, string } names_2 = null;
+
+  /** The date this variant was created in milliseconds from the epoch. */
+  union { null, long } created = null;
+
+  /**
+  The time at which this variant was last updated in
+  milliseconds from the epoch.
+  */
+  union { null, long } updated = null;
+
+  /**
+  The reference on which this variant occurs.
+  (e.g. `chr20` or `X`)
+
+  If the API server supports the "classic" mode, this field must not be null.
+  */
+  union { null, string } referenceName = null;
+
+  /**
+  The start position at which this variant occurs (0-based).
+  This corresponds to the first base of the string of reference bases.
+  Genomic positions are non-negative integers less than reference length.
+  Variants spanning the join of circular genomes are represented as
+  two variants one on each side of the join (position 0).
+
+  If the API server supports the "classic" mode, this field must not be null.
+  */
+  union { null, long } start = null;
+
+  /**
+  The end position (exclusive), resulting in [start, end) closed-open interval.
+  This is typically calculated by `start + referenceBases.length`.
+
+  If the API server supports the "classic" mode, this field must not be null.
+  */
+  union { null, long } end = null;
+
+  /**
+  The reference bases for this variant. They occupy the range described by
+  `referenceName`, `start`, and `end`, which all must be set if this field is
+  set.
+
+  If the API server supports the "classic" mode, this field must not be null.
+  */
+  union { null, string } referenceBases = null;
+
+  /**
+  The bases that appear instead of the reference bases. If this field is not
+  null, `referenceBases` must be set.
+
+  If the API server supports the "classic" mode, this field must not be null.
+
+  Only the first two are retained.
+  */
+  union { null, string } alternateBases_1 = null;
+  union { null, string } alternateBases_2 = null;
+
+  /**
+  The IDs of the reference and alternate `Allele`s for this `Variant`. The first
+  is the reference allele, and any others are alternates. If this field is set
+  along with `referenceName`, `start`, `end`, `referenceBases`, and/or
+  `alternateBases`, those fields must agree with the `Allele`s given here.
+
+  If the API server supports the "graph" mode, this field must not be null.
+
+  Only the first two are retained.
+  */
+  union { null, string } alleleIds_1;
+  union { null, string } alleleIds_2;
+
+  /**
+  A map of additional variant information.
+  */
+  /*map<array<string>> info = {};*/
+
+  /**
+  The variant calls for this particular variant. Each one represents the
+  determination of genotype with respect to this variant. `Call`s in this array
+  are implicitly associated with this `Variant`.
+
+  Calls are also available through the `searchCalls()` API method.
+
+  If the API server supports the "classic" mode, this field must not be null.
+  */
+  /*union { null, array<Call> } calls = null; */
+
+  /* Call is inlined below. Each Call should result in a new Variant object (that is,
+  the non-Call fields of Variant are denormalized. */
+
+  /**
+  The ID of the call set this variant call belongs to.
+  If this field is not present, the ordering of the call sets from a
+  `SearchCallSetsRequest` over this `VariantSet` is guaranteed to match
+  the ordering of the calls on this `Variant`.
+  The number of results will also be the same.
+  */
+  union { null, string } callSetId;
+
+  /**
+  The name of the call set this variant call belongs to.
+  If this field is not present, the ordering of the call sets from a
+  `SearchCallSetsRequest` over this `VariantSet` is guaranteed to match
+  the ordering of the calls on this `Variant`.
+  The number of results will also be the same.
+  */
+  union { null, string } callSetName = null;
+
+  /**
+  The ID of the `Variant` that this `Call` belongs to. Must be set in any `Call`
+  that is not being returned from the server already contained within its
+  `Variant`.
+  */
+  union { null, string } variantId;
+
+  /**
+  The genotype of this variant call.
+
+  A 0 value represents the reference allele of the associated `Variant`. Any
+  other value is a 1-based index into the alternate alleles of the associated
+  `Variant`.
+
+  If a variant had a referenceBases field of "T", an alternateBases
+  value of ["A", "C"], and the genotype was [2, 1], that would mean the call
+  represented the heterozygous value "CA" for this variant. If the genotype
+  was instead [0, 1] the represented value would be "TA". Ordering of the
+  genotype values is important if the phaseset field is present.
+
+  Only the first two are retained.
+  */
+  union { null, int } genotype_1 = null;
+  union { null, int } genotype_2 = null;
+
+  /**
+  If this field is a string, this variant call's genotype ordering implies
+  the phase of the bases and is consistent with any other variant calls on
+  the same contig which have the same phaseset string.
+
+  If this field is an array, each entry is associated with the corresponding
+  entry in the `genotype` array. Allele instances that are associated with the
+  same `phaseset` string occur on the same molecule of DNA.
+
+  For example, if one `Call` has `genotype` [0, 1], another is associated with
+  `Allele` 3, and both have a `phaseset` of ["maternal", "paternal"], then one
+  DNA molecule carries 0, 3 and another carries 1, 3.
+
+  If the API server supports the "classic" mode, this field must not be an
+  array. If the API server supports the "graph" mode and not the "classic" mode,
+  this field must be an array.
+  */
+  /* union { null, string, array<string> } phaseset = null; */
+
+  /**
+  The genotype likelihoods for this variant call. Each array entry
+  represents how likely a specific genotype is for this call as
+  log10(P(data | genotype)), analogous to the GL tag in the VCF spec. The
+  value ordering is defined by the GL tag in the VCF spec.
+
+  Only the first two are retained.
+  */
+  union { null, double } genotypeLikelihood_1 = null;
+  union { null, double } genotypeLikelihood_2 = null;
+
+  /**
+  A map of additional variant call information.
+  */
+  /* map<array<string>> info = {}; */
+
+
+}
+
+}

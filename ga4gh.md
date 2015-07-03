@@ -147,3 +147,38 @@ sequence (`<locus>`) occurs in, and the following expression can be used in SQL 
 cast(floor(<locus> / 1000000.) AS INT) * 1000000
 ```
 
+## Load variants tool
+
+This flattens and partitions in one step:
+
+```bash
+hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
+  LoadVariantsTool \
+  -D mapreduce.map.java.opts="-Djava.net.preferIPv4Stack=true -Xmx3g" \
+  -D mapreduce.reduce.java.opts="-Djava.net.preferIPv4Stack=true -Xmx3g" \
+  -D mapreduce.map.memory.mb=4096 \
+  -D mapreduce.reduce.memory.mb=4096 \
+  ga4gh-variants-partition-strategy \
+  sample1 \
+  datasets/variants_avro \
+  dataset:hdfs:datasets/variants_flat_locuspart2
+```
+
+```bash
+kite-dataset create dataset:hive:/user/tom/datasets/variants_flat_locuspart2
+```
+
+Try querying the table in Hive:
+
+```bash
+hive -e 'select count(*) from datasets.variants_flat_locuspart2'
+```
+
+Or Impala:
+
+```bash
+impala-shell -q 'invalidate metadata'
+impala-shell -q 'compute stats datasets.variants_flat_locuspart2'
+impala-shell -q 'select count(*) from datasets.variants_flat_locuspart2'
+impala-shell -q 'select count(*) from datasets.variants_flat_locuspart2 where referencename="chr1"'
+```

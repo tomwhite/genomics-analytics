@@ -8,26 +8,30 @@
   <packaging>jar</packaging>
   <name>genomics-analytics</name>
 
+  <properties>
+      <kite.version>1.1.1-SNAPSHOT</kite.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-core</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-crunch</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-mapreduce</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-s3</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.crunch</groupId>
@@ -66,6 +70,11 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.opencb.ga4gh</groupId>
+      <artifactId>ga4gh</artifactId>
+      <version>0.5.1</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -81,22 +90,16 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.1.5</version>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
+        <version>1.7.7</version>
         <executions>
           <execution>
+            <phase>generate-sources</phase>
             <goals>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
+              <goal>schema</goal>
+              <goal>idl-protocol</goal>
             </goals>
-            <configuration>
-              <args>
-                <arg>-deprecation</arg>
-                <arg>-dependencyfile</arg>
-                <arg>${project.build.directory}/.scala_dependencies</arg>
-              </args>
-            </configuration>
           </execution>
         </executions>
       </plugin>

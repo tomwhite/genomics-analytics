@@ -2,11 +2,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.crunch.DoFn;
+import org.apache.crunch.Emitter;
+import org.apache.crunch.MapFn;
 import org.apache.crunch.PCollection;
+import org.apache.crunch.PTable;
 import org.apache.crunch.Pipeline;
 import org.apache.crunch.PipelineResult;
 import org.apache.crunch.Source;
 import org.apache.crunch.impl.mr.MRPipeline;
+import org.apache.crunch.lib.Sort;
+import org.apache.crunch.types.avro.Avros;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -26,6 +32,7 @@ public class CrunchPartitionTool extends Configured implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     String partitionStrategyName = args[0];
+    String sampleGroup = "sample1";
     String inputPath = args[1];
     String outputPath = args[2];
 
@@ -46,14 +53,18 @@ public class CrunchPartitionTool extends Configured implements Tool {
         .build();
 
     View<GenericData.Record> dataset = Datasets.create("dataset:" + outputPath, desc,
-        GenericData.Record.class);
+        GenericData.Record.class).getDataset().with("sample_group", sampleGroup);
 
     int numReducers = conf.getInt("mapreduce.job.reduces", 1);
     System.out.println("Num reducers: " + numReducers);
     PCollection<GenericData.Record> partition =
         CrunchDatasets.partition(records, dataset, numReducers);
 
-    pipeline.write(partition, CrunchDatasets.asTarget(dataset));
+    PTable<String, GenericData.Record> keyed = partition.by(new ExtractSortKeyFn(),
+        Avros.strings());
+    PCollection<GenericData.Record> sorted = Sort.sort(keyed).values();
+
+    pipeline.write(sorted, CrunchDatasets.asTarget(dataset));
 
     PipelineResult result = pipeline.done();
     return result.succeeded() ? 0 : 1;
@@ -64,7 +75,7 @@ public class CrunchPartitionTool extends Configured implements Tool {
     System.exit(exitCode);
   }
 
-  private PartitionStrategy readPartitionStrategy(String name) throws IOException {
+  static PartitionStrategy readPartitionStrategy(String name) throws IOException {
     InputStream in = CrunchPartitionTool.class.getResourceAsStream(name + ".json");
     try {
       return PartitionStrategyParser.parse(in);
@@ -72,6 +83,13 @@ public class CrunchPartitionTool extends Configured implements Tool {
       if (in != null) {
         in.close();
       }
+    }
+  }
+
+  static class ExtractSortKeyFn extends MapFn<GenericData.Record, String> {
+    @Override
+    public String map(GenericData.Record input) {
+      return input.get("referenceBases").toString();
     }
   }
 }

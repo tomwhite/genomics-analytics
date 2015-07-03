@@ -17,7 +17,7 @@ public class SchemaUtils {
   private SchemaUtils() {
   }
 
-  private static Format readFormat(Path path) {
+  public static Format readFormat(Path path) {
     if (path.getName().endsWith(".avro")) {
       return Formats.AVRO;
     } else if (path.getName().endsWith(".parquet")) {
@@ -26,7 +26,7 @@ public class SchemaUtils {
     throw new IllegalStateException("Unrecognized format for " + path);
   }
 
-  private static Path findFile(Path path, Configuration conf) throws IOException {
+  public static Path findFile(Path path, Configuration conf) throws IOException {
     FileSystem fs = path.getFileSystem(conf);
     if (fs.isDirectory(path)) {
       FileStatus[] fileStatuses = fs.listStatus(path, new PathFilter() {
