@@ -47,7 +47,7 @@ public class CrunchFlattenTool extends Configured implements Tool {
     System.exit(exitCode);
   }
 
-  private static class FlattenFn extends DoFn<GenericData.Record, GenericData.Record> {
+  static class FlattenFn extends DoFn<GenericData.Record, GenericData.Record> {
 
     private String schemaString;
     private transient Schema flatSchema;
