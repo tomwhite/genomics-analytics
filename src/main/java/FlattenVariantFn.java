@@ -8,8 +8,7 @@ import org.ga4gh.models.Variant;
 class FlattenVariantFn extends DoFn<Variant, FlatVariant> {
   @Override
   public void process(Variant variant, Emitter<FlatVariant> emitter) {
-    List<Call> calls = variant.getCalls();
-    for (Call call : calls) {
+    for (Call call : variant.getCalls()) {
       FlatVariant flatVariant = new FlatVariant();
       flatVariant.setId(variant.getId());
       flatVariant.setVariantSetId(variant.getVariantSetId());
