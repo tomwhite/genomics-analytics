@@ -66,6 +66,11 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.opencb.ga4gh</groupId>
+      <artifactId>ga4gh</artifactId>
+      <version>0.5.1</version>
+    </dependency>
   </dependencies>
 
   <build>

@@ -27,8 +27,8 @@ record FlatVariant {
   string variantSetId;
 
   /** Names for the variant, for example a RefSNP ID. Only the first two are retained. */
-  union { null, long } names_1 = null;
-  union { null, long } names_2 = null;
+  union { null, string } names_1 = null;
+  union { null, string } names_2 = null;
 
   /** The date this variant was created in milliseconds from the epoch. */
   union { null, long } created = null;
