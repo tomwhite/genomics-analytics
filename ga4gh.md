@@ -147,3 +147,15 @@ sequence (`<locus>`) occurs in, and the following expression can be used in SQL 
 cast(floor(<locus> / 1000000.) AS INT) * 1000000
 ```
 
+## Load variants tool
+
+This flattens and partitions in one step:
+
+```bash
+hadoop jar target/genomics-analytics-0.0.1-SNAPSHOT-job.jar \
+  LoadVariantsTool \
+  ga4gh-variants-partition-strategy \
+  sample1 \
+  datasets/variants_avro \
+  dataset:hdfs:datasets/variants_flat_locuspart2
+```

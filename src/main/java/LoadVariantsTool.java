@@ -14,6 +14,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 import org.ga4gh.models.FlatVariant;
 import org.ga4gh.models.Variant;
 import org.kitesdk.data.CompressionType;
@@ -77,6 +78,11 @@ public class LoadVariantsTool extends Configured implements Tool {
     PipelineResult result = pipeline.done();
     return result.succeeded() ? 0 : 1;
 
+  }
+
+  public static void main(String[] args) throws Exception {
+    int exitCode = ToolRunner.run(new LoadVariantsTool(), args);
+    System.exit(exitCode);
   }
 
   private static Source<Variant> readSource(Path path, Configuration conf) throws
