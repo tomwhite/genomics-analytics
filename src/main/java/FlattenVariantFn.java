@@ -39,6 +39,6 @@ class FlattenVariantFn extends DoFn<Variant, FlatVariant> {
     }
   }
   private static <T> T get(List<T> names, int index) {
-    return names.size() > index ? names.get(index) : null;
+    return index < names.size() ? names.get(index) : null;
   }
 }
