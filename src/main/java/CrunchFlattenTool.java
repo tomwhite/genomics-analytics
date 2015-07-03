@@ -7,18 +7,13 @@ import org.apache.crunch.Pipeline;
 import org.apache.crunch.PipelineResult;
 import org.apache.crunch.Source;
 import org.apache.crunch.impl.mr.MRPipeline;
+import org.apache.crunch.io.parquet.AvroParquetFileTarget;
 import org.apache.crunch.types.avro.Avros;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.kitesdk.data.CompressionType;
-import org.kitesdk.data.DatasetDescriptor;
-import org.kitesdk.data.Datasets;
-import org.kitesdk.data.Formats;
-import org.kitesdk.data.View;
-import org.kitesdk.data.crunch.CrunchDatasets;
 
 public class CrunchFlattenTool extends Configured implements Tool {
 
@@ -41,16 +36,7 @@ public class CrunchFlattenTool extends Configured implements Tool {
     PCollection<GenericData.Record> flatRecords = records.parallelDo(new
         FlattenFn(flatSchema), Avros.generics(flatSchema));
 
-    DatasetDescriptor desc = new DatasetDescriptor.Builder()
-        .schema(flatSchema)
-        .format(Formats.PARQUET)
-        .compressionType(CompressionType.Uncompressed)
-        .build();
-
-    View<GenericData.Record> dataset = Datasets.create("dataset:" + outputPath, desc,
-        GenericData.Record.class);
-
-    pipeline.write(flatRecords, CrunchDatasets.asTarget(dataset));
+    pipeline.write(flatRecords, new AvroParquetFileTarget(outputPath));
 
     PipelineResult result = pipeline.done();
     return result.succeeded() ? 0 : 1;
