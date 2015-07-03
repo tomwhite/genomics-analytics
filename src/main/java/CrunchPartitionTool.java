@@ -28,6 +28,7 @@ public class CrunchPartitionTool extends Configured implements Tool {
     String partitionStrategyName = args[0];
     String inputPath = args[1];
     String outputPath = args[2];
+    String sampleGroup = "sample1";
 
     Configuration conf = getConf();
 
@@ -46,7 +47,7 @@ public class CrunchPartitionTool extends Configured implements Tool {
         .build();
 
     View<GenericData.Record> dataset = Datasets.create("dataset:" + outputPath, desc,
-        GenericData.Record.class);
+        GenericData.Record.class).getDataset().with("sample_group", sampleGroup);
 
     int numReducers = conf.getInt("mapreduce.job.reduces", 1);
     System.out.println("Num reducers: " + numReducers);
