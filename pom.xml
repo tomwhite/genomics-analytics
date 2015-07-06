@@ -8,26 +8,30 @@
   <packaging>jar</packaging>
   <name>genomics-analytics</name>
 
+  <properties>
+      <kite.version>1.1.1-SNAPSHOT</kite.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-core</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-crunch</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-mapreduce</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-s3</artifactId>
-      <version>1.1.0</version>
+      <version>${kite.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.crunch</groupId>

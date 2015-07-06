@@ -1,14 +1,15 @@
 import java.io.IOException;
+import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
+import org.apache.avro.generic.GenericData;
 import org.apache.crunch.MapFn;
 import org.apache.crunch.PCollection;
-import org.apache.crunch.PTable;
 import org.apache.crunch.Pipeline;
 import org.apache.crunch.PipelineResult;
 import org.apache.crunch.Source;
 import org.apache.crunch.impl.mr.MRPipeline;
 import org.apache.crunch.io.From;
 import org.apache.crunch.io.parquet.AvroParquetFileSource;
-import org.apache.crunch.lib.Sort;
 import org.apache.crunch.types.avro.Avros;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -66,14 +67,15 @@ public class LoadVariantsTool extends Configured implements Tool {
 
     int numReducers = conf.getInt("mapreduce.job.reduces", 1);
     System.out.println("Num reducers: " + numReducers);
-    PCollection<FlatVariant> partition =
-        CrunchDatasets.partition(flatRecords, dataset, numReducers);
 
-    PTable<String, FlatVariant> keyed = partition.by(
-        new ExtractSortKeyFn(), Avros.strings());
-    PCollection<FlatVariant> sorted = Sort.sort(keyed).values();
+    final Schema sortKeySchema = SchemaBuilder.record("sortKey")
+        .fields().requiredString("sampleId").endRecord();
 
-    pipeline.write(sorted, CrunchDatasets.asTarget(dataset));
+    PCollection<FlatVariant> partitioned =
+        CrunchDatasets.partitionAndSort(flatRecords, dataset, new
+            FlatVariantRecordMapFn(sortKeySchema), sortKeySchema, numReducers, 1);
+
+    pipeline.write(partitioned, CrunchDatasets.asTarget(dataset));
 
     PipelineResult result = pipeline.done();
     return result.succeeded() ? 0 : 1;
@@ -97,11 +99,19 @@ public class LoadVariantsTool extends Configured implements Tool {
     throw new IllegalStateException("Unrecognized format for " + file);
   }
 
-  private static class ExtractSortKeyFn extends MapFn<FlatVariant, String> {
+  private static class FlatVariantRecordMapFn extends MapFn<FlatVariant, GenericData.Record> {
+
+    private final String sortKeySchemaString; // TODO: improve
+
+    public FlatVariantRecordMapFn(Schema sortKeySchema) {
+      this.sortKeySchemaString = sortKeySchema.toString();
+    }
+
     @Override
-    public String map(FlatVariant flatVariant) {
-      return flatVariant.getCallSetName().toString();
+    public GenericData.Record map(FlatVariant input) {
+      GenericData.Record record = new GenericData.Record(new Schema.Parser().parse(sortKeySchemaString));
+      record.put("sampleId", input.getCallSetId());
+      return record;
     }
   }
-
 }
