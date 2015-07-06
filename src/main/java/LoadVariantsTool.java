@@ -25,6 +25,7 @@ import org.kitesdk.data.Format;
 import org.kitesdk.data.Formats;
 import org.kitesdk.data.View;
 import org.kitesdk.data.crunch.CrunchDatasets;
+import org.kitesdk.data.mapreduce.DatasetKeyOutputFormat;
 
 /**
  * Loads Variants stored in Avro or Parquet GA4GH format into a Hadoop filesystem,
@@ -45,6 +46,8 @@ public class LoadVariantsTool extends Configured implements Tool {
     String outputPath = args[3];
 
     Configuration conf = getConf();
+    // to avoid problem with Parquet string statistics not being correct
+    conf.setBoolean(DatasetKeyOutputFormat.KITE_COPY_RECORDS, true);
 
     Path path = new Path(inputPath);
     Source<Variant> source = readSource(path, conf);
